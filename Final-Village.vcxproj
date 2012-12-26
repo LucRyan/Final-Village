@@ -73,6 +73,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\arrayPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\arrayPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\carPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\carPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\cubeMap.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\cubeMap.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glutPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glutPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\skyPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\skyPro.v" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +93,7 @@
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\mat.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.h" />
+    <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\vec.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -92,6 +103,7 @@
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\InitShader.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.cpp" />
     <ClCompile Include="Final-Village.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

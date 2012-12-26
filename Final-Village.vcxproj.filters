@@ -25,6 +25,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\carPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\carPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\arrayPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\cubeMap.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glutPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\skyPro.f" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\arrayPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\cubeMap.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glutPro.v" />
+    <None Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\skyPro.v" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -57,6 +67,9 @@
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -75,6 +88,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

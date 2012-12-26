@@ -1,3 +1,4 @@
+#pragma once
 #include "glm.h"
 
 class Model {
@@ -27,10 +28,13 @@ public:
 		  stack<mat4> *mvStack, 
 		  vec4 transVec, vec3 rotVec, vec3 scalVec,
 		  GLuint program, bool texFlag, GLubyte *textures );
+	
+	
+	Model();
 	~Model();
 
 	// Render the Model
-	void render();
+	virtual void render();
 };
 
 struct Node {

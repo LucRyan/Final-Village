@@ -3,9 +3,12 @@
 
 #include "stdafx.h"
 #include "Models.h"
+#include "myCamera.h"
+#include "Skybox.h"
 
 enum {
-	Dude = 0,
+	Sky = 0,
+	Dude = 1,
 	NumNodes,
 	Quit
 };
@@ -13,6 +16,17 @@ enum {
 stack<Angel::mat4> modelViewStack; 
 Node  nodes[NumNodes];
 Angel::mat4 projmat;  //projection matrix
+myCamera camera( Angel::vec4(0.0, 0.0, 1.0, 0.0), Angel::vec4(0.0, 1.0, 0.0, 0.0), 50 );
+GLuint glutPro, arrayPro, skyPro, carPro, cubeMapPro; 
+
+Angel::vec4 carPosition(0.0, 0.0,50.0,1.0);  //the terrain's high is -2.0
+Angel::vec4 carForward(0.0,0.0,-1.0,0.0) ;
+float carRotation = 0.0;
+float carTurn = 3.0;
+void cam();
+
+GLuint buffer;
+GLuint vao;
 
 void m_glewInitAndVersion(void) {
 	fprintf(stdout, "OpenGL Version: %s\n", glGetString(GL_VERSION));
@@ -40,43 +54,78 @@ void
 	if ( node->_sibling ) { traverse( node->_sibling ); }
 }
 
-vec4 eye = vec4( 0, 10, 20, 1 );
-vec4 at = vec4( 0, 0, 0, 1 );
-
-GLuint carPro;
 void display( void )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glDepthMask( GL_TRUE );
 
+	//glUseProgram( glutPro );
+	//glUniformMatrix4fv(glGetUniformLocation( glutPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
+	//glUniformMatrix4fv(glGetUniformLocation( glutPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+
+	//glUseProgram( arrayPro );
+	//glUniformMatrix4fv(glGetUniformLocation( arrayPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
+	//glUniformMatrix4fv(glGetUniformLocation( arrayPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+
+	glUseProgram( skyPro );
+	glUniformMatrix4fv(glGetUniformLocation( skyPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
+	glUniformMatrix4fv(glGetUniformLocation( skyPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+
+	//glUseProgram( cubeMapPro );
+	//glUniformMatrix4fv(glGetUniformLocation( cubeMapPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
+	//glUniformMatrix4fv(glGetUniformLocation( cubeMapPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+
 	glUseProgram( carPro );
 	glUniformMatrix4fv(glGetUniformLocation( carPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
 	glUniformMatrix4fv(glGetUniformLocation( carPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
-	
+
 	glPolygonMode(GL_FRONT, GL_FILL);
-	traverse( &nodes[Dude] );  //begin traverse the tree
+	
+	cam();
+	traverse( &nodes[Sky] );  //begin traverse the tree
+	
 	glutSwapBuffers();
 }
 
 
 void initNodes(){
-	carPro = InitShader( "carPro.v", "carPro.f" );
-	GLubyte *dudeTex = NULL; 
 
+	Model *skybox = new Skybox("data/sphere.obj", "data/textures/sky.ppm", 512, 512,
+		&modelViewStack,
+		skyPro, (GLuint)10 ,&camera);
+
+	GLubyte *dudeTex = NULL; 
 	Model *dude = new Model("data/al.obj", 
 		&modelViewStack, 
-		vec4( 0.0, 0.0, 0.0, 0 ), vec3(0,-30,0), vec3(1.0, 1.0, 1.0),
+		vec4( 0.0, 0.0, 0.0, 0 ), vec3(0,-30,0), vec3(5.0, 5.0, 5.0),
 		carPro, false, dudeTex);
+	nodes[Sky] = Node(skybox, &nodes[Dude], NULL);
 	nodes[Dude] = Node(dude, NULL, NULL);
 }
+
+void cam() {
+
+	camera.setEye(Angel::vec4(carPosition.x + sin(carRotation/180*PI)*0.4, 
+			carPosition.y + 0.8, carPosition.z + cos(carRotation/180*PI)*0.4, 1.0 ));
+
+	modelViewStack.top() = camera.getLookAt();
+	glUniformMatrix4fv(glGetUniformLocation( carPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+	Print(modelViewStack.top());
+}
+
 
 
 void init()
 {	
 
+	glutPro = InitShader( "glutPro.v", "glutPro.f" );
+	arrayPro = InitShader( "arrayPro.v", "arrayPro.f" );
+	skyPro = InitShader( "skyPro.v", "skyPro.f" );
+	carPro = InitShader( "carPro.v", "carPro.f" );
+	cubeMapPro = InitShader( "cubeMap.v", "cubeMap.f" );
+
 	Angel::mat4 modelView = Angel::identity_mat();  //tmp
 	projmat = Angel::Perspective( 60.0, 1, 1, 200 ); 
-	//modelView = modelView * LookAt( eye, at, vec4(0,1,0,1) );
 	modelViewStack.push( modelView );  //stack
 
 	glClearColor(0.5, 0.8, 0.9, 1.0);
@@ -85,16 +134,40 @@ void init()
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-	
+
+
 	initNodes();
-	//loadTexture();
 	//loadModel();
 }
 
 
+void reshape( int width, int height ) {
+	glViewport( 0, 0, (GLsizei) width, (GLsizei) height );
+}
 
 
-
+void funcKey( int key, int x, int y ) {
+/*	if( switchCam == 0 ) */
+		switch( key ) {
+		case GLUT_KEY_UP: // move forward		
+			carPosition += carForward;
+			break;
+		case GLUT_KEY_DOWN: // move backward
+			carPosition -= carForward;
+			break;
+		case GLUT_KEY_LEFT:
+			carRotation += carTurn;
+			camera.yawLeft( carTurn );
+			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
+			break;
+		case GLUT_KEY_RIGHT:
+			carRotation -= carTurn;
+			camera.yawRight( carTurn );
+			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
+			break;
+		}
+	glutPostRedisplay();
+}
 
 
 int main( int argc, char **argv )
@@ -107,12 +180,13 @@ int main( int argc, char **argv )
 	m_glewInitAndVersion();
 	init();
 
-	//glutReshapeFunc( reshape );
+	glutReshapeFunc( reshape );
 	glutDisplayFunc( display );
 	//glutIdleFunc(idle);
 	//glutKeyboardFunc( keyBoard );
-	//glutSpecialFunc( funcKey );
+	glutSpecialFunc( funcKey );
 
 	glutMainLoop();
 	return 0;
 }
+
