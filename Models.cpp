@@ -21,7 +21,6 @@ Model::Model(char* fileName,
 	glmLinearTexture(_model); //Map the texture to Model
 	glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
 
-	_group = _model->groups;
 	_mvStack = mvStack;
 	_transVec = transVec;
 	_rotVec = rotVec;
@@ -43,7 +42,8 @@ Model::~Model(){
 void Model::render(){
 
 	glUseProgram( _program );
-	
+	GLMgroup* _group = _model->groups;
+
 	for ( int i = 0; i < _model->numgroups; ++i ) {
 		glBindVertexArray( _model->vao[i] );
 		glBindBuffer( GL_ARRAY_BUFFER, _model->vbo[i] );
@@ -56,19 +56,19 @@ void Model::render(){
 		//Set the vNormal
 		GLuint vNormal = glGetAttribLocation( _program, "vNormal" );
 		glEnableVertexAttribArray( vNormal );
-		glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_model->groups->numtriangles*3) );
+		glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_group->numtriangles*3) );
 
 		//Set the vTexture Coordinates
 		if(_texFlag){	
 			GLuint vTexCoord = glGetAttribLocation( _program, "vTexCoord" );
 			glEnableVertexAttribArray( vTexCoord );
-			glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_model->groups->numtriangles*3*2) );	
+			glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_group->numtriangles*3*2) );	
 			glUniform1i( glGetUniformLocation(_program, "texture"), 0 );
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_UNSIGNED_BYTE, _textures );
 		}
 
 		//Set _materials and light
-		_material = &_model->materials[_model->groups->material];
+		_material = &_model->materials[_group->material];
 		Angel::vec4 ambient( _material->ambient[0], _material->ambient[1], _material->ambient[2], _material->ambient[3]);
 		Angel::vec4 diffuse( _material->diffuse[0], _material->diffuse[1], _material->diffuse[2], _material->diffuse[3]);
 		Angel::vec4 specular( _material->specular[0], _material->specular[1], _material->specular[2], _material->specular[3]);
@@ -93,9 +93,9 @@ void Model::render(){
 							Angel::Scale( 1.0/_scalVec.x, 1.0/_scalVec.y, 1.0/_scalVec.z ) );
 
 		glUniformMatrix4fv(glGetUniformLocation( _program, "ModelView" ), 1, GL_TRUE, _mvStack->top());
-	
-		glDrawArrays( GL_TRIANGLES, 0, _model->groups->numtriangles*3 );	
-		_group = _model->groups->next;
 		_mvStack->pop();
+		glDrawArrays( GL_TRIANGLES, 0, _group->numtriangles*3 );	
+		_group = _group->next;
+
 	}
 }

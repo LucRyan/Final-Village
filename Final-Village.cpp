@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "Models.h"
 #include "myCamera.h"
+
 #include "Skybox.h"
 
 enum {
@@ -18,15 +19,25 @@ Node  nodes[NumNodes];
 Angel::mat4 projmat;  //projection matrix
 myCamera camera( Angel::vec4(0.0, 0.0, 1.0, 0.0), Angel::vec4(0.0, 1.0, 0.0, 0.0), 50 );
 GLuint glutPro, arrayPro, skyPro, carPro, cubeMapPro; 
-
+GLMmodel *carMod, *dudeMod;
 Angel::vec4 carPosition(0.0, 0.0,50.0,1.0);  //the terrain's high is -2.0
 Angel::vec4 carForward(0.0,0.0,-1.0,0.0) ;
 float carRotation = 0.0;
 float carTurn = 3.0;
-void cam();
 
 GLuint buffer;
 GLuint vao;
+typedef Angel::vec4  color4;
+typedef Angel::vec4  point4;
+
+extern point4 distant_light_position;
+extern color4 distant_light_ambient;
+extern color4 distant_light_diffuse;
+extern color4 distant_light_specular;
+
+void cam();
+void car();
+
 
 void m_glewInitAndVersion(void) {
 	fprintf(stdout, "OpenGL Version: %s\n", glGetString(GL_VERSION));
@@ -54,14 +65,20 @@ void
 	if ( node->_sibling ) { traverse( node->_sibling ); }
 }
 
+
+void idle() {
+	//skyRotate += 0.05;
+	glutPostRedisplay();
+}
+
 void display( void )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glDepthMask( GL_TRUE );
 
-	//glUseProgram( glutPro );
-	//glUniformMatrix4fv(glGetUniformLocation( glutPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
-	//glUniformMatrix4fv(glGetUniformLocation( glutPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+	glUseProgram( glutPro );
+	glUniformMatrix4fv(glGetUniformLocation( glutPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
+	glUniformMatrix4fv(glGetUniformLocation( glutPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
 
 	//glUseProgram( arrayPro );
 	//glUniformMatrix4fv(glGetUniformLocation( arrayPro, "Projection" ), 1, GL_TRUE, projmat);  //pass to shader
@@ -83,7 +100,7 @@ void display( void )
 	
 	cam();
 	traverse( &nodes[Sky] );  //begin traverse the tree
-	
+	car();
 	glutSwapBuffers();
 }
 
@@ -97,7 +114,7 @@ void initNodes(){
 	GLubyte *dudeTex = NULL; 
 	Model *dude = new Model("data/al.obj", 
 		&modelViewStack, 
-		vec4( 0.0, 0.0, 0.0, 0 ), vec3(0,-30,0), vec3(5.0, 5.0, 5.0),
+		vec4( 0.0, 1.0, 0.0, 0 ), vec3(0,-30,0), vec3(5.0, 5.0, 5.0),
 		carPro, false, dudeTex);
 	nodes[Sky] = Node(skybox, &nodes[Dude], NULL);
 	nodes[Dude] = Node(dude, NULL, NULL);
@@ -109,15 +126,12 @@ void cam() {
 			carPosition.y + 0.8, carPosition.z + cos(carRotation/180*PI)*0.4, 1.0 ));
 
 	modelViewStack.top() = camera.getLookAt();
-	glUniformMatrix4fv(glGetUniformLocation( carPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
 	Print(modelViewStack.top());
 }
 
 
-
 void init()
 {	
-
 	glutPro = InitShader( "glutPro.v", "glutPro.f" );
 	arrayPro = InitShader( "arrayPro.v", "arrayPro.f" );
 	skyPro = InitShader( "skyPro.v", "skyPro.f" );
@@ -135,6 +149,12 @@ void init()
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
 
+	carMod=glmReadOBJ("data/porsche.obj");
+	glmUnitize(carMod);
+	glmFacetNormals(carMod);
+	glmVertexNormals(carMod, 90.0);
+	glmLinearTexture(carMod);
+	glmLoadGroupsInVBO(carMod);
 
 	initNodes();
 	//loadModel();
@@ -182,11 +202,57 @@ int main( int argc, char **argv )
 
 	glutReshapeFunc( reshape );
 	glutDisplayFunc( display );
-	//glutIdleFunc(idle);
+	glutIdleFunc(idle);
 	//glutKeyboardFunc( keyBoard );
 	glutSpecialFunc( funcKey );
 
 	glutMainLoop();
 	return 0;
+}
+
+void car() {
+	glUseProgram( carPro );
+
+	GLMgroup* group = carMod->groups;
+	GLMmaterial* material;
+
+	for ( int i = 0; i < carMod->numgroups; ++i ) {
+		glBindVertexArray( carMod->vao[i] );
+		glBindBuffer( GL_ARRAY_BUFFER, carMod->vbo[i] );
+		GLuint vPosition = glGetAttribLocation( carPro, "vPosition" );
+		glEnableVertexAttribArray( vPosition );
+		glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
+			BUFFER_OFFSET(0) );
+		GLuint vNormal = glGetAttribLocation( carPro, "vNormal" );
+		glEnableVertexAttribArray( vNormal );
+		glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0,
+			BUFFER_OFFSET(sizeof(GLfloat)*4*group->numtriangles*3) );
+
+		material = &carMod->materials[group->material];
+		Angel::vec4 ambient( material->ambient[0], material->ambient[1], material->ambient[2], material->ambient[3]);
+		Angel::vec4 diffuse( material->diffuse[0], material->diffuse[1], material->diffuse[2], material->diffuse[3]);
+		Angel::vec4 specular( material->specular[0], material->specular[1], material->specular[2], material->specular[3]);
+		glUniform4fv( glGetUniformLocation(carPro, "AmbientProduct"), 1, 
+			distant_light_ambient * ambient );
+		glUniform4fv( glGetUniformLocation(carPro, "DiffuseProduct"), 1, 
+			distant_light_diffuse * diffuse );
+		glUniform4fv( glGetUniformLocation(carPro, "SpecularProduct"), 1, 
+			distant_light_specular * specular );
+		glUniform1f( glGetUniformLocation(carPro, "Shininess"), 
+			material->shininess );
+		glUniform4fv( glGetUniformLocation(carPro, "LightPosition"), 1, distant_light_position );
+		glUniform1f( glGetUniformLocation(carPro, "alpha"), 1.0 ); 
+
+		modelViewStack.push(modelViewStack.top());
+		modelViewStack.top() *= Angel::Translate( carPosition );
+		modelViewStack.top() *= Angel::RotateY( -180.0 + carRotation );
+		modelViewStack.top() *= Angel::Scale( 2.0, 2.0, 2.0 );
+		glUniformMatrix4fv( glGetUniformLocation(carPro, "NormalMatrix"), 1, GL_TRUE,
+			Angel::RotateY( -180.0 + carRotation )*Angel::Scale( 1.0/2.0, 1.0/2.0, 1.0/2.0 ) );
+		glUniformMatrix4fv(glGetUniformLocation( carPro, "ModelView" ), 1, GL_TRUE, modelViewStack.top());
+		modelViewStack.pop();
+		glDrawArrays( GL_TRIANGLES, 0, group->numtriangles*3 );	
+		group = group->next;
+	}
 }
 
