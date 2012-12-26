@@ -12,6 +12,8 @@ private:
     GLubyte *_textures;
 	vec4 _transVec; 
 	vec3 _rotVec, _scalVec;
+	bool _alphaFlag;
+	int _alphaIndex;
 
 
 public:
@@ -29,12 +31,20 @@ public:
 		  vec4 transVec, vec3 rotVec, vec3 scalVec,
 		  GLuint program, bool texFlag, GLubyte *textures );
 	
+	//Alpha Constructor
+	Model(char* fileName, 
+		stack<mat4> *mvStack, 
+		vec4 transVec, vec3 rotVec, vec3 scalVec,
+		GLuint program, bool alphaFlag, int alphaIndex );
 	
 	Model();
 	~Model();
 
 	// Render the Model
 	virtual void render();
+
+	void setTraslate(vec4 transVec);
+	void setRotate(vec3 rotVec);
 };
 
 struct Node {

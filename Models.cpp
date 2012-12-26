@@ -30,6 +30,30 @@ Model::Model(char* fileName,
 	_textures = textures;
 }
 
+Model::Model(char* fileName, 
+	stack<mat4> *mvStack, 
+	vec4 transVec, vec3 rotVec, vec3 scalVec,
+	GLuint program, bool alphaFlag, int alphaIndex ){
+
+		_model = glmReadOBJ(fileName); //Loading the model
+		if (!_model) exit(0); // See if it success
+
+		glmUnitize(_model);	// Normalize vertices
+		glmFacetNormals(_model); // Compute facet normals
+		glmVertexNormals(_model, 90.0); // Compute vertex normals
+		glmLinearTexture(_model); //Map the texture to Model
+		glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
+
+		_mvStack = mvStack;
+		_transVec = transVec;
+		_rotVec = rotVec;
+		_scalVec = scalVec;
+		_program = program;
+		_texFlag = false;
+		_alphaFlag = alphaFlag;
+		_alphaIndex = alphaIndex;
+}
+
 Model::~Model(){
 	delete(_group); 
 	delete(_mvStack);
@@ -39,6 +63,16 @@ Model::~Model(){
 	delete(_textures);
 }
 	
+void Model::setTraslate(vec4 transVec){
+	_transVec = transVec;
+};
+
+void Model::setRotate(vec3 rotVec){
+	_rotVec = rotVec;
+};
+
+
+
 void Model::render(){
 
 	glUseProgram( _program );
@@ -64,7 +98,7 @@ void Model::render(){
 			glEnableVertexAttribArray( vTexCoord );
 			glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_group->numtriangles*3*2) );	
 			glUniform1i( glGetUniformLocation(_program, "texture"), 0 );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_UNSIGNED_BYTE, _textures );
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, _textures );
 		}
 
 		//Set _materials and light
@@ -77,18 +111,22 @@ void Model::render(){
 		glUniform4fv( glGetUniformLocation(_program, "SpecularProduct"), 1, distant_light_specular * specular );
 		glUniform1f ( glGetUniformLocation(_program, "Shininess"), _material->shininess );
 		glUniform4fv( glGetUniformLocation(_program, "LightPosition"), 1, distant_light_position );
-	
+		if(i == _alphaIndex && _alphaFlag){
+			glUniform1f( glGetUniformLocation(_program, "alpha"), 0.4 ); 
+		}else{
+			glUniform1f( glGetUniformLocation(_program, "alpha"), 1.0 ); 
+		}
 
 		_mvStack->push(_mvStack->top());
 		_mvStack->top() *= Angel::Translate( _transVec );
-		_mvStack->top() *= Angel::RotateX( _rotVec.x );
 		_mvStack->top() *= Angel::RotateY( _rotVec.y );
 		_mvStack->top() *= Angel::RotateZ( _rotVec.z );
+		_mvStack->top() *= Angel::RotateX( _rotVec.x );
 		_mvStack->top() *= Angel::Scale( _scalVec );
 
 		glUniformMatrix4fv( glGetUniformLocation(_program, "NormalMatrix"), 1, GL_TRUE, 
+							Angel::RotateY( _rotVec.y )*				
 							Angel::RotateX( _rotVec.x )*
-							Angel::RotateY( _rotVec.y )*
 							Angel::RotateZ( _rotVec.z )*
 							Angel::Scale( 1.0/_scalVec.x, 1.0/_scalVec.y, 1.0/_scalVec.z ) );
 
