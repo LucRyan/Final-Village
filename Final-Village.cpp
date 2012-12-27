@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "Models.h"
 #include "myCamera.h"
-
+#include "Controls.h"
 #include "Skybox.h"
 
 // The enumerations to make a clear tree.
@@ -29,14 +29,14 @@ int switchCam = 2;
 
 // Car Related Parameters and Variables.
 // I need put the car as global variables so that it can drive with the camera
-Model *car ;
-Angel::vec4 carPosition(300.0, 0.0, 400.0,1.0);  //the terrain's high is -2.0
+Model *car;
+Angel::vec4 carPosition(300.0, 0.0, 440.0,1.0);  //the terrain's high is 0.0
 Angel::vec4 carForward(0.0,0.0,-1.0,0.0) ; // the minimum step of the car's move
 float carTurn = 2.0; // the minimum angle of car's turn
 float carRotation = 0.0; // store the car's rotation
 
 // Functions Declaration 
-void cam();
+void cam(); // Camera function, press 'V' to switch different Viewpoints.
 
 
 void m_glewInitAndVersion(void) {
@@ -47,6 +47,69 @@ void m_glewInitAndVersion(void) {
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+}
+
+
+void initNodes(){
+
+	// Initialize the skybox
+	Model *skybox = new Skybox("data/sphere.obj", "data/textures/sky.ppm", 512, 512, // Object, textures 
+		&modelViewStack, // Model view stack
+		skyPro, (GLfloat)10.0 ,&camera); // shader program, rotate value and camera object
+
+	// Initialize the Terrain.
+	Model *terrain = new Model("data/HOUSTON.obj", 
+		&modelViewStack, arrayPro,
+		vec4( 0.0, 83.0, 0.0, 0 ), vec3(-90,0,0), vec3(1000.0, 1000.0, 1000.0));
+
+	// Initialize the Grass Field.
+	Model *grass = new Model("data/center.obj", 
+		&modelViewStack, arrayPro,
+		vec4( 0.0, -3.0, 0.0, 0 ), vec3(0,0,0), vec3(1000.0, 1.0, 1000.0),
+		true, "data/textures/grass.ppm", 64, 64);
+
+	// Initialize the Car.
+	car = new Model("data/sr5.obj", 
+		&modelViewStack, 
+		carPosition, vec3(-90.0, -180.0 + carRotation, 0.0), vec3(2.0, 2.0, 2.0),
+		carPro, true, 21);
+
+	// Initialize the Dude.
+	Model *dude = new Model("data/al.obj", 
+		&modelViewStack, carPro,
+		vec4( 300.0, 1.0, 380.0, 0 ), vec3(0,0,0), vec3(2.0, 2.0, 2.0));
+
+	// Build the tree.
+	nodes[Sky] = Node(skybox, &nodes[Terrain], NULL);
+	nodes[Terrain] = Node(terrain, &nodes[Grass], NULL);
+	nodes[Grass] = Node(grass, &nodes[Dude], NULL);
+	nodes[Dude] = Node(dude, &nodes[Car], NULL);
+	// Always put the car in last position, 
+	// for rendering the transparent object successfully.
+	nodes[Car] = Node(car, NULL, NULL); 
+}
+
+
+void init()
+{	
+	glutPro = InitShader( "glutPro.v", "glutPro.f" );
+	arrayPro = InitShader( "arrayPro.v", "arrayPro.f" );
+	skyPro = InitShader( "skyPro.v", "skyPro.f" );
+	carPro = InitShader( "carPro.v", "carPro.f" );
+	cubeMapPro = InitShader( "cubeMap.v", "cubeMap.f" );
+
+	Angel::mat4 modelView = Angel::identity_mat();  //tmp
+	projmat = Angel::Perspective( 45.0, 1, 1, 500 ); 
+	modelViewStack.push( modelView );  //stack
+
+	glClearColor(0.5, 0.8, 0.9, 1.0);
+	glClearDepth( 1.0f );
+	glShadeModel( GL_FLAT );
+	glEnable( GL_DEPTH_TEST );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
+
+	initNodes();
 }
 
 void
@@ -67,7 +130,6 @@ void
 
 
 void idle() {
-	//skyRotate += 0.05;
 	glutPostRedisplay();
 }
 
@@ -104,39 +166,6 @@ void display( void )
 }
 
 
-void initNodes(){
-	GLubyte *noneTex =  glmReadPPM("data/textures/grass.ppm", 64, 64);
-
-	Model *skybox = new Skybox("data/sphere.obj", "data/textures/sky.ppm", 512, 512,
-		&modelViewStack,
-		skyPro, (GLuint)10 ,&camera);
-
-	Model *terrain = new Model("data/HOUSTON.obj", 
-		&modelViewStack, 
-		vec4( 0.0, 83.0, 0.0, 0 ), vec3(-90,0,0), vec3(1000.0, 1000.0, 1000.0),
-		arrayPro, false, noneTex);
-
-	Model *grass = new Model("data/center.obj", 
-		&modelViewStack, 
-		vec4( 0.0, -3.0, 0.0, 0 ), vec3(0,0,0), vec3(1000.0, 1.0, 1000.0),
-		arrayPro, true, noneTex);
-
-	car = new Model("data/sr5.obj", 
-		&modelViewStack, 
-		carPosition, vec3(-90.0, -180.0 + carRotation, 0.0), vec3(2.0, 2.0, 2.0),
-		carPro, true, 21);
-
-	Model *dude = new Model("data/al.obj", 
-		&modelViewStack, 
-		vec4( 300.0, 1.0, 380.0, 0 ), vec3(0,0,0), vec3(2.0, 2.0, 2.0),
-		carPro, false, noneTex);
-
-	nodes[Sky] = Node(skybox, &nodes[Terrain], NULL);
-	nodes[Terrain] = Node(terrain, &nodes[Grass], NULL);
-	nodes[Grass] = Node(grass, &nodes[Dude], NULL);
-	nodes[Dude] = Node(dude, &nodes[Car], NULL);
-	nodes[Car] = Node(car, NULL, NULL);
-}
 
 void cam() {
 
@@ -152,27 +181,6 @@ void cam() {
 }
 
 
-void init()
-{	
-	glutPro = InitShader( "glutPro.v", "glutPro.f" );
-	arrayPro = InitShader( "arrayPro.v", "arrayPro.f" );
-	skyPro = InitShader( "skyPro.v", "skyPro.f" );
-	carPro = InitShader( "carPro.v", "carPro.f" );
-	cubeMapPro = InitShader( "cubeMap.v", "cubeMap.f" );
-
-	Angel::mat4 modelView = Angel::identity_mat();  //tmp
-	projmat = Angel::Perspective( 45.0, 1, 1, 500 ); 
-	modelViewStack.push( modelView );  //stack
-
-	glClearColor(0.5, 0.8, 0.9, 1.0);
-	glClearDepth( 1.0f );
-	glShadeModel( GL_FLAT );
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-
-	initNodes();
-}
 
 
 void reshape( int width, int height ) {
@@ -180,121 +188,6 @@ void reshape( int width, int height ) {
 	projmat = Angel::Perspective( 45.0, width/height, 1, 500 ); 
 }
 
-
-void funcKey( int key, int x, int y ) {
-   if( switchCam != 0 ) {
-		switch( key ) {
-		case GLUT_KEY_UP: // move forward		
-			carPosition += carForward;
-			car->setTraslate(carPosition);
-			break;
-		case GLUT_KEY_DOWN: // move backward
-			carPosition -= carForward;
-			car->setTraslate(carPosition);
-			break;
-		case GLUT_KEY_LEFT:
-			carRotation += carTurn;
-			camera.yawLeft( carTurn );
-			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
-			car->setRotate(vec3(-90.0, -180.0 + carRotation, 0.0));
-			break;
-		case GLUT_KEY_RIGHT:
-			carRotation -= carTurn;
-			camera.yawRight( carTurn );
-			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
-			car->setRotate(vec3(-90.0, -180.0 + carRotation, 0.0));
-			break;
-		}
-	}else {
-	   switch( key ) {
-	   default:
-		   break;
-	   }
-   }
-	glutPostRedisplay();
-}
-
-void keyBoard( unsigned char key, int x, int y ) {
-	if ( switchCam == 0 ) {  //fly Cam
-		switch(key) {
-		case 'w': // MOVE Forward
-			camera.moveForward();
-			break;
-		case 's': // MOVE Backward
-			camera.moveBackward();
-			break;
-		case 'a': // MOVE Left
-			camera.moveLeft();
-			break;
-		case 'd': // MOVE Right
-			camera.moveRight();
-			break;
-		case 'q': // Turn Left
-			camera.yawLeft();
-			break;
-		case 'e': // Turn Right
-			camera.yawRight();
-			break;
-		case 'x': // pitch up
-			camera.pitchUp();
-			break;
-		case 'X': // pitch down
-			camera.pitchDown();
-			break;
-		case 'c': // yaw counter-clockwise in the un plane
-			camera.rollRight();
-			break;
-		case 'C': // yaw clockwise in the un plane
-			camera.rollLeft();
-			break;
-		case 033:  // Escape key
-			exit( EXIT_SUCCESS );
-		default:
-			break;
-		}
-	} else {
-		switch(key) {
-		case 'w': // move forward		
-			carPosition += carForward;
-			car->setTraslate(carPosition);
-			break;
-		case 's': // move backward
-			carPosition -= carForward;
-			car->setTraslate(carPosition);
-			break;
-		case 'a':
-			carRotation += carTurn;
-			camera.yawLeft( carTurn );
-			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
-			car->setRotate(vec3(-90.0, -180.0 + carRotation, 0.0));
-			break;
-		case 'd':
-			carRotation -= carTurn;
-			camera.yawRight( carTurn );
-			carForward = Angel::vec4(-sin(carRotation/180*PI), 0, -cos(carRotation/180*PI), 0);
-			car->setRotate(vec3(-90.0, -180.0 + carRotation, 0.0));
-			break;
-		case 'v': // switch cam
-		case 'V':  // inCar/followCar
-			if ( switchCam == 1)
-				switchCam = 2;
-			else
-				switchCam = 1;
-			break;
-		case 'f':
-		case 'F':
-			if ( switchCam == 0)
-				switchCam = 2;
-			else
-				switchCam = 0;
-			break;
-		case 033:  // Escape key
-		case 'q': case 'Q':
-			exit( EXIT_SUCCESS );
-		}
-	}
-	glutPostRedisplay();
-}
 
 
 int main( int argc, char **argv )
@@ -309,7 +202,7 @@ int main( int argc, char **argv )
 
 	glutReshapeFunc( reshape );
 	glutDisplayFunc( display );
-	//glutIdleFunc(idle);
+	glutIdleFunc(idle);
 	glutKeyboardFunc( keyBoard );
 	glutSpecialFunc( funcKey );
 

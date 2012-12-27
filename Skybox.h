@@ -13,7 +13,7 @@ private:
 	vec4 _transVec; 
 	vec3 _rotVec, _scalVec;
 	GLuint _textures[2];
-	GLuint _skyRotate;
+	GLfloat _skyRotate;
 	myCamera *_camera;
 
 public:
@@ -22,6 +22,7 @@ public:
 		   GLuint program, GLuint skyRotate, myCamera *camera);
 	using Model::render;
 	void render();
+	void setSkyRotate(GLuint skyRotate);
 	~Skybox(void);
 };
 

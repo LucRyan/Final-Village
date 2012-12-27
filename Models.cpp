@@ -8,9 +8,9 @@ Model::Model(){
 
 }
 Model::Model(char* fileName, 
-			 stack<mat4> *mvStack, 
+			 stack<mat4> *mvStack, GLuint program,
 			 vec4 transVec, vec3 rotVec, vec3 scalVec,
-			 GLuint program, bool texFlag, GLubyte *textures ){
+			  bool texFlag, char* fileTextrue, int txWidth, int txHeight ){
 
 	_model = glmReadOBJ(fileName); //Loading the model
 	if (!_model) exit(0); // See if it success
@@ -21,13 +21,44 @@ Model::Model(char* fileName,
 	glmLinearTexture(_model); //Map the texture to Model
 	glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
 
+	//World Coordinates Information
 	_mvStack = mvStack;
+	_program = program;
 	_transVec = transVec;
 	_rotVec = rotVec;
 	_scalVec = scalVec;
-	_program = program;
+
+	//Textures Information
 	_texFlag = texFlag;
-	_textures = textures;
+	if(texFlag){
+		_textures = glmReadPPM(fileTextrue, txWidth, txHeight);
+		_txWidth = txWidth;
+		_txHeight = txHeight;
+	}
+}
+
+Model::Model(char* fileName, 
+	stack<mat4> *mvStack, GLuint program,
+	vec4 transVec, vec3 rotVec, vec3 scalVec){
+
+		_model = glmReadOBJ(fileName); //Loading the model
+		if (!_model) exit(0); // See if it success
+
+		glmUnitize(_model);	// Normalize vertices
+		glmFacetNormals(_model); // Compute facet normals
+		glmVertexNormals(_model, 90.0); // Compute vertex normals
+		glmLinearTexture(_model); //Map the texture to Model
+		glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
+
+		//World Coordinates Information
+		_mvStack = mvStack;
+		_program = program;
+		_transVec = transVec;
+		_rotVec = rotVec;
+		_scalVec = scalVec;
+
+		//Textures Information
+		_texFlag = false;
 }
 
 Model::Model(char* fileName, 
@@ -98,7 +129,7 @@ void Model::render(){
 			glEnableVertexAttribArray( vTexCoord );
 			glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(GLfloat)*4*_group->numtriangles*3*2) );	
 			glUniform1i( glGetUniformLocation(_program, "texture"), 0 );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, _textures );
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, _txWidth, _txHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, _textures );
 		}
 
 		//Set _materials and light
@@ -134,6 +165,5 @@ void Model::render(){
 		_mvStack->pop();
 		glDrawArrays( GL_TRIANGLES, 0, _group->numtriangles*3 );	
 		_group = _group->next;
-
 	}
 }

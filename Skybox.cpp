@@ -65,6 +65,7 @@ void Skybox::render()
 
 	_mvStack->top() *= Angel::Translate( Angel::vec4( _camera->getEye().x, _camera->getEye().y-0.3, _camera->getEye().z, 0.0 ) );
 	_mvStack->top() *= Angel::RotateZ( 90.0 );
+	_skyRotate += 0.05;
 	_mvStack->top() *= Angel::RotateX( _skyRotate );
 	_mvStack->top() *= Angel::Scale( 2.0, 2.0, 2.0 );
 	glUniformMatrix4fv(glGetUniformLocation( _program, "ModelView" ), 1, GL_TRUE, _mvStack->top());

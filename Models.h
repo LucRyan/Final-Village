@@ -14,6 +14,8 @@ private:
 	vec3 _rotVec, _scalVec;
 	bool _alphaFlag;
 	int _alphaIndex;
+	int _txWidth;
+	int _txHeight;
 
 
 public:
@@ -21,15 +23,15 @@ public:
 	// Initialize the Model by loading it and set shader, Light and other materials.
 	//@param program the shader
 	//@param texFlag, true if this model has 2D texture, for example .ppm
-	//@param textures the 2D texture
+	//@param fileTextrue the 2D texture filename
 	//@param, mvStack the Model View Stack
 	//@param, transVec the Translate Vector
 	//@param, rotVec the Rotate Vector
 	//@param, scalVec the Scale Vector
 	Model(char* fileName, 
-		  stack<mat4> *mvStack, 
+		  stack<mat4> *mvStack, GLuint program,
 		  vec4 transVec, vec3 rotVec, vec3 scalVec,
-		  GLuint program, bool texFlag, GLubyte *textures );
+		  bool texFlag, char* fileTextrue, int txWidth, int txHeight );
 	
 	//Alpha Constructor
 	Model(char* fileName, 
@@ -37,14 +39,22 @@ public:
 		vec4 transVec, vec3 rotVec, vec3 scalVec,
 		GLuint program, bool alphaFlag, int alphaIndex );
 	
-	Model();
+	//Non-2DTexture Constructor
+	Model::Model(char* fileName, 
+		stack<mat4> *mvStack, GLuint program,
+		vec4 transVec, vec3 rotVec, vec3 scalVec);
+
+	//Default Constructor
+	Model(void);
+
+	//Destructor
 	~Model();
 
 	// Render the Model
 	virtual void render();
 
 	void setTraslate(vec4 transVec);
-	void setRotate(vec3 rotVec);
+	virtual void setRotate(vec3 rotVec);
 };
 
 struct Node {
