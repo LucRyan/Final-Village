@@ -2,7 +2,7 @@
 #include "glm.h"
 
 class Model {
-private:
+protected:
 	GLMmodel* _model;
 	GLMgroup* _group;
 	GLMmaterial* _material;
@@ -55,6 +55,7 @@ public:
 
 	void setTraslate(vec4 transVec);
 	virtual void setRotate(vec3 rotVec);
+	virtual void updateSwitcher(bool switcher);
 };
 
 struct Node {

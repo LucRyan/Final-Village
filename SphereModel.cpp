@@ -19,7 +19,9 @@ SphereModel::SphereModel(char* frontName, char* BackName,
 						 char* LeftName, char* RightName, 
 						 char* UpperName, char* BelowName, 
 						 int txWidth, int txHeight,
-					     stack<mat4> *mvStack, GLuint program, GLuint cubemap){
+					     stack<mat4> *mvStack, GLuint program, GLuint cubemap,
+						 bool rotateFlag, bool indoorFlag,
+						 vec4 transVec, vec3 rotVec, GLfloat ScaleSize){
 
 	    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glGenTextures(1, &cubemap);
@@ -36,6 +38,11 @@ SphereModel::SphereModel(char* frontName, char* BackName,
 		_program = program;
 		_txWidth = txWidth;
 		_txHeight = txHeight;
+		_transVec = transVec;
+		_rotVec = rotVec;
+		_scalVec.x = ScaleSize;
+		_rotateFlag = rotateFlag;
+		_indoorFlag = indoorFlag;
 }
 
 
@@ -46,6 +53,9 @@ SphereModel::~SphereModel(void)
 
 void SphereModel::render()
 {
+	if(!_switcherFlag && _indoorFlag)
+		return;
+
 	glBindTexture(GL_TEXTURE_CUBE_MAP, _cubemap);
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -71,13 +81,18 @@ void SphereModel::render()
 
 	_RotateAngle -= 0.5;
 	glUseProgram( _program );
-	_mvStack->push(_mvStack->top());
-	_mvStack->top() *= Angel::Translate( Angel::vec4( 270.0, 3.0, 330.0, 0.0 ) );
-	_mvStack->top() *= Angel::RotateX(0);
-	_mvStack->top() *= Angel::RotateZ(200);
-	_mvStack->top() *= Angel::RotateY(_RotateAngle);
+	//_mvStack->push(_mvStack->top());
+	_mvStack->top() *= Angel::Translate(_transVec);
+	_mvStack->top() *= Angel::RotateX(_rotVec.x);
+	_mvStack->top() *= Angel::RotateZ(_rotVec.z);
+	_mvStack->top() *= Angel::RotateY(_rotateFlag?_RotateAngle:_rotVec.y);
 	glUniformMatrix4fv(glGetUniformLocation( _program, "ModelView" ), 1, GL_TRUE, _mvStack->top());
 	glUniform1ui(glGetUniformLocation(_program, "cubeMap"), _cubemap);
-	glutSolidSphere(5, 200, 200);
-	_mvStack->pop();
+	glutSolidSphere(_scalVec.x, 200, 200);
+	//_mvStack->pop();
+}
+
+
+void SphereModel::updateSwitcher(bool switcher){
+	_switcherFlag = switcher;
 }

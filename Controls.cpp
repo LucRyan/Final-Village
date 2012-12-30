@@ -10,6 +10,7 @@ extern vec4 carForward ; // the minimum step of the car's move
 extern float carTurn; // the minimum angle of car's turn
 extern float carRotation ; // store the car's rotation
 extern myCamera camera; // initialize the camera
+extern bool switcher;
 
 void funcKey( int key, int x, int y ) {
 	if( switchCam != 0 ) {
@@ -76,6 +77,12 @@ void keyBoard( unsigned char key, int x, int y ) {
 			break;
 		case 'C': // yaw clockwise in the un plane
 			camera.rollLeft();
+			break;
+		case 't':
+			if(switcher == false)
+				switcher = true;
+			else
+				switcher = false;
 			break;
 		case 033:  // Escape key
 			exit( EXIT_SUCCESS );

@@ -90,6 +90,7 @@
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\CheckError.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Controls.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glm.h" />
+    <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\IndoorModel.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Light.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\mat.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.h" />
@@ -104,6 +105,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Controls.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\glm.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\IndoorModel.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\InitShader.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.cpp" />

@@ -7,6 +7,7 @@
 #include "Controls.h"
 #include "Skybox.h"
 #include "SphereModel.h"
+#include "IndoorModel.h"
 
 // The enumerations to make a clear tree.
 enum {
@@ -16,8 +17,12 @@ enum {
 	Grass = 3,
 	Earth = 4,
 	Dude = 5,
+	Room = 6,
+	Bed = 7,
+	Rose = 8,
+	Dragon,
+	ReflectBall,
 	NumNodes,
-	Quit
 };
 
 // Several Global variables
@@ -26,12 +31,15 @@ Node  nodes[NumNodes]; // The tree struct
 Angel::mat4 projmat;  //projection matrix
 GLuint glutPro, arrayPro, skyPro, carPro, cubeMapPro; // Several shader programs 
 myCamera camera( vec4(0.0, 0.0, 1.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0), 50 ); // initialize the camera
-int switchCam = 2;
-
+int switchCam = 2; // Camera state.
+bool switcher = true;// the switcher in room.
+Model *room, *bed, *rose, *dragon, *reflectBall; // the indoor model.
+bool indoorFlag = false; //Use to define the camera in the room.
+GLfloat roomY = -30.0;
 
 // Car Related Parameters and Variables.
 // I need put the car as global variables so that it can drive with the camera
-Model *car;
+Model *car; // Car Model
 Angel::vec4 carPosition(270.0, 0.0, 440.0,1.0);  //the terrain's high is 0.0
 Angel::vec4 carForward(0.0,0.0,-1.0,0.0) ; // the minimum step of the car's move
 float carTurn = 2.0; // the minimum angle of car's turn
@@ -79,20 +87,61 @@ void initNodes(){
 	// Initialize the Dude.
 	Model *dude = new Model("data/al.obj", 
 		&modelViewStack, carPro,
-		vec4( 280.0, 0, 330.0, 0 ), vec3(0,0,0), vec3(1.0, 1.0, 1.0));
+		vec4( 275.0, 0, 350.0, 0 ), vec3(0,-1,0), vec3(1.0, 1.0, 1.0));
 
 	//Initialize the Earth.
 	Model *earth = new SphereModel("data/textures/Earth_Front.ppm", "data/textures/Earth_Back.ppm",
 								   "data/textures/Earth_Left.ppm", "data/textures/Earth_Right.ppm",
 								   "data/textures/Earth_Upper.ppm", "data/textures/Earth_Below.ppm",
 								   512,512,
-								   &modelViewStack, cubeMapPro, 1);
+								   &modelViewStack, cubeMapPro, 1,
+								   true, false,
+								   vec4( 270.0, 3.0, 330.0, 0.0 ), vec3(0,0,200), 5.0);
+
+	//Initialize the Room.
+	room = new IndoorModel("data/cube.obj", 
+						   &modelViewStack, arrayPro,
+						   vec4( 295.0, roomY + 8, 350.0, 0 ), vec3(90,0,0), vec3(15.0, 15.0, 10.0),
+						   true, "data/textures/wall.ppm", 64, 64 );
+	
+	//Initialize the Bed.
+	bed = new IndoorModel("data/MIDEVIL.obj", 
+						  &modelViewStack, carPro,
+						  vec4( 302.0, roomY + 3, 347.0, 0 ), vec3(-90,0,0), vec3(10.0, 10.0, 10.0),
+						  true, "data/textures/wall.ppm", 64, 64 );
+	
+	//Initialize the Rose.
+	rose = new IndoorModel("data/rose+vase.obj", 
+		&modelViewStack, carPro,
+		vec4( 300.0, roomY +  1, 343.0, 0 ), vec3(0,0,0), vec3(2.0, 2.0, 2.0),
+		true, "data/textures/wall.ppm", 64, 64 );
+	
+	//Initialize the Dragon.
+	dragon = new IndoorModel("data/dragon.obj", 
+		&modelViewStack, carPro,
+		vec4( 300.0, roomY - 1, 354.0, 0 ), vec3(-90,90,0), vec3(3.0, 3.0, 3.0),
+		true, "data/textures/wall.ppm", 64, 64 );
+	
+	//Initialize the Ball.
+	reflectBall = new SphereModel("data/textures/front.ppm", "data/textures/back.ppm",
+							      "data/textures/left.ppm", "data/textures/right.ppm",
+								  "data/textures/top.ppm", "data/textures/bottom.ppm",
+								  512,512,
+								  &modelViewStack, cubeMapPro, 2,
+								  false, true,
+								  vec4( 284.0, roomY + 1.0, 339.0, 0.0 ), vec3(0,-45,180), 3.0);
+
 	// Build the tree.
 	nodes[Sky] = Node(skybox, &nodes[Terrain], NULL);
 	nodes[Terrain] = Node(terrain, &nodes[Grass], NULL);
 	nodes[Grass] = Node(grass, &nodes[Dude], NULL);
 	nodes[Dude] = Node(dude, &nodes[Earth], NULL);
-	nodes[Earth] = Node(earth, &nodes[Car], NULL);
+	nodes[Earth] = Node(earth, &nodes[Room], NULL);
+	nodes[Room] =  Node(room, NULL, &nodes[Bed]);
+	nodes[Bed] =  Node(bed, NULL, &nodes[Dragon]);
+	nodes[Dragon] =  Node(dragon, &nodes[Rose], NULL );
+	nodes[Rose] =  Node(rose, NULL, &nodes[ReflectBall]);
+	nodes[ReflectBall] =  Node(reflectBall, &nodes[Car], NULL);
 	// Always put the car in last position, 
 	// for rendering the transparent object successfully.
 	nodes[Car] = Node(car, NULL, NULL); 
@@ -139,6 +188,28 @@ void
 
 
 void idle() {
+	room->updateSwitcher(switcher);
+	bed->updateSwitcher(switcher);
+	dragon->updateSwitcher(switcher);
+	rose->updateSwitcher(switcher);
+	reflectBall->updateSwitcher(switcher);
+	if(camera.getEye().x > 265 && camera.getEye().x < 275 &&
+	   camera.getEye().y > -2 && camera.getEye().y < 8 &&
+	   camera.getEye().z > 325 && camera.getEye().z < 335){
+			switchCam = 0;
+			camera.setEye(vec4( 285.0, roomY, 365.0, 1 ));
+			indoorFlag = true;
+	};
+
+	if( indoorFlag == true &&
+		camera.getEye().x > 280 && camera.getEye().x < 310 &&
+		camera.getEye().y > roomY - 2 && camera.getEye().y < roomY + 18 &&
+		camera.getEye().z > 335 && camera.getEye().z < 366){
+	}else if (indoorFlag == true){
+			camera.setEye(vec4( 270.0, 0, 340.0, 1 ));
+			indoorFlag = false;
+	};
+
 	glutPostRedisplay();
 }
 

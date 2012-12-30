@@ -1,17 +1,29 @@
-#include "stdafx.h"
+#include "StdAfx.h"
 #include "Models.h"
-#include "Light.h"
+#include "IndoorModel.h"
 
-int const NumVertices = 36; 
+typedef Angel::vec4  color4;
+typedef Angel::vec4  point4;
 
-Model::Model(){
+extern point4 point_light_position;
+extern color4 point_light_ambient;
+extern color4 point_light_diffuse;
+extern color4 point_light_specular;
 
+extern color4 dark_a;
+extern color4 dark_d ;
+extern color4 dark_s ;
+extern GLfloat dark_sh;
+
+IndoorModel::IndoorModel(void)
+{
 }
-Model::Model(char* fileName, 
-			 stack<mat4> *mvStack, GLuint program,
-			 vec4 transVec, vec3 rotVec, vec3 scalVec,
-			  bool texFlag, char* fileTextrue, int txWidth, int txHeight ){
 
+IndoorModel::IndoorModel(char* fileName, 
+	stack<mat4> *mvStack, GLuint program,
+	vec4 transVec, vec3 rotVec, vec3 scalVec,
+	bool texFlag, char* fileTextrue, int txWidth, int txHeight )
+{
 	_model = glmReadOBJ(fileName); //Loading the model
 	if (!_model) exit(0); // See if it success
 
@@ -30,6 +42,7 @@ Model::Model(char* fileName,
 
 	//Textures Information
 	_texFlag = texFlag;
+	_alphaFlag = false;
 	if(texFlag){
 		_textures = glmReadPPM(fileTextrue, txWidth, txHeight);
 		_txWidth = txWidth;
@@ -37,74 +50,12 @@ Model::Model(char* fileName,
 	}
 }
 
-Model::Model(char* fileName, 
-	stack<mat4> *mvStack, GLuint program,
-	vec4 transVec, vec3 rotVec, vec3 scalVec){
-
-		_model = glmReadOBJ(fileName); //Loading the model
-		if (!_model) exit(0); // See if it success
-
-		glmUnitize(_model);	// Normalize vertices
-		glmFacetNormals(_model); // Compute facet normals
-		glmVertexNormals(_model, 90.0); // Compute vertex normals
-		glmLinearTexture(_model); //Map the texture to Model
-		glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
-
-		//World Coordinates Information
-		_mvStack = mvStack;
-		_program = program;
-		_transVec = transVec;
-		_rotVec = rotVec;
-		_scalVec = scalVec;
-
-		//Textures Information
-		_texFlag = false;
+IndoorModel::~IndoorModel(void)
+{
 }
 
-Model::Model(char* fileName, 
-	stack<mat4> *mvStack, 
-	vec4 transVec, vec3 rotVec, vec3 scalVec,
-	GLuint program, bool alphaFlag, int alphaIndex ){
 
-		_model = glmReadOBJ(fileName); //Loading the model
-		if (!_model) exit(0); // See if it success
-
-		glmUnitize(_model);	// Normalize vertices
-		glmFacetNormals(_model); // Compute facet normals
-		glmVertexNormals(_model, 90.0); // Compute vertex normals
-		glmLinearTexture(_model); //Map the texture to Model
-		glmLoadGroupsInVBO(_model); // Load the model (vertices and normals) into a vertex buffer
-
-		_mvStack = mvStack;
-		_transVec = transVec;
-		_rotVec = rotVec;
-		_scalVec = scalVec;
-		_program = program;
-		_texFlag = false;
-		_alphaFlag = alphaFlag;
-		_alphaIndex = alphaIndex;
-}
-
-Model::~Model(){
-	delete(_group); 
-	delete(_mvStack);
-	delete(_transVec); 
-	delete(_rotVec );
-	delete(_scalVec);
-	delete(_textures);
-}
-	
-void Model::setTraslate(vec4 transVec){
-	_transVec = transVec;
-};
-
-void Model::setRotate(vec3 rotVec){
-	_rotVec = rotVec;
-};
-
-
-
-void Model::render(){
+void IndoorModel::render(){
 
 	glUseProgram( _program );
 	GLMgroup* _group = _model->groups;
@@ -137,18 +88,23 @@ void Model::render(){
 		Angel::vec4 ambient( _material->ambient[0], _material->ambient[1], _material->ambient[2], _material->ambient[3]);
 		Angel::vec4 diffuse( _material->diffuse[0], _material->diffuse[1], _material->diffuse[2], _material->diffuse[3]);
 		Angel::vec4 specular( _material->specular[0], _material->specular[1], _material->specular[2], _material->specular[3]);
-
-		glUniform4fv( glGetUniformLocation(_program, "AmbientProduct"), 1,  distant_light_ambient * ambient );
-		glUniform4fv( glGetUniformLocation(_program, "DiffuseProduct"), 1,  distant_light_diffuse * diffuse );
-		glUniform4fv( glGetUniformLocation(_program, "SpecularProduct"), 1, distant_light_specular * specular );
+		glUniform4fv( glGetUniformLocation(_program, "AmbientProduct"), 1,  point_light_ambient * ambient );
+		glUniform4fv( glGetUniformLocation(_program, "DiffuseProduct"), 1,  point_light_diffuse * diffuse );
+		glUniform4fv( glGetUniformLocation(_program, "SpecularProduct"), 1, point_light_specular * specular );
 		glUniform1f ( glGetUniformLocation(_program, "Shininess"), _material->shininess );
-		glUniform4fv( glGetUniformLocation(_program, "LightPosition"), 1, distant_light_position );
+		glUniform4fv( glGetUniformLocation(_program, "LightPosition"), 1, point_light_position );
 		if(i == _alphaIndex && _alphaFlag){
 			glUniform1f( glGetUniformLocation(_program, "alpha"), 0.3 ); 
 		}else{
 			glUniform1f( glGetUniformLocation(_program, "alpha"), 1.0 ); 
 		}
 
+		if ( !_switcher){
+			glUniform4fv( glGetUniformLocation(_program, "AmbientProduct"), 1, dark_a );
+			glUniform4fv( glGetUniformLocation(_program, "DiffuseProduct"), 1, dark_d );
+			glUniform4fv( glGetUniformLocation(_program, "SpecularProduct"), 1, dark_s );
+			glUniform1f( glGetUniformLocation(_program, "Shininess"), dark_sh );
+		}
 
 		_mvStack->push(_mvStack->top());
 		_mvStack->top() *= Angel::Translate( _transVec );
@@ -158,10 +114,10 @@ void Model::render(){
 		_mvStack->top() *= Angel::Scale( _scalVec );
 
 		glUniformMatrix4fv( glGetUniformLocation(_program, "NormalMatrix"), 1, GL_TRUE, 
-							Angel::RotateY( _rotVec.y )*				
-							Angel::RotateX( _rotVec.x )*
-							Angel::RotateZ( _rotVec.z )*
-							Angel::Scale( 1.0/_scalVec.x, 1.0/_scalVec.y, 1.0/_scalVec.z ) );
+			Angel::RotateY( _rotVec.y )*				
+			Angel::RotateX( _rotVec.x )*
+			Angel::RotateZ( _rotVec.z )*
+			Angel::Scale( 1.0/_scalVec.x, 1.0/_scalVec.y, 1.0/_scalVec.z ) );
 
 		glUniformMatrix4fv(glGetUniformLocation( _program, "ModelView" ), 1, GL_TRUE, _mvStack->top());
 		_mvStack->pop();
@@ -170,4 +126,6 @@ void Model::render(){
 	}
 }
 
-void Model::updateSwitcher(bool switcher){};
+void IndoorModel::updateSwitcher(bool switcher){
+	_switcher = switcher;
+}
