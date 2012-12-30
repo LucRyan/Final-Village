@@ -6,6 +6,7 @@
 #include "myCamera.h"
 #include "Controls.h"
 #include "Skybox.h"
+#include "SphereModel.h"
 
 // The enumerations to make a clear tree.
 enum {
@@ -13,7 +14,8 @@ enum {
 	Terrain = 1,
 	Car = 2,
 	Grass = 3,
-	Dude = 4,
+	Earth = 4,
+	Dude = 5,
 	NumNodes,
 	Quit
 };
@@ -30,7 +32,7 @@ int switchCam = 2;
 // Car Related Parameters and Variables.
 // I need put the car as global variables so that it can drive with the camera
 Model *car;
-Angel::vec4 carPosition(300.0, 0.0, 440.0,1.0);  //the terrain's high is 0.0
+Angel::vec4 carPosition(270.0, 0.0, 440.0,1.0);  //the terrain's high is 0.0
 Angel::vec4 carForward(0.0,0.0,-1.0,0.0) ; // the minimum step of the car's move
 float carTurn = 2.0; // the minimum angle of car's turn
 float carRotation = 0.0; // store the car's rotation
@@ -77,13 +79,20 @@ void initNodes(){
 	// Initialize the Dude.
 	Model *dude = new Model("data/al.obj", 
 		&modelViewStack, carPro,
-		vec4( 300.0, 1.0, 380.0, 0 ), vec3(0,0,0), vec3(2.0, 2.0, 2.0));
+		vec4( 280.0, 0, 330.0, 0 ), vec3(0,0,0), vec3(1.0, 1.0, 1.0));
 
+	//Initialize the Earth.
+	Model *earth = new SphereModel("data/textures/Earth_Front.ppm", "data/textures/Earth_Back.ppm",
+								   "data/textures/Earth_Left.ppm", "data/textures/Earth_Right.ppm",
+								   "data/textures/Earth_Upper.ppm", "data/textures/Earth_Below.ppm",
+								   512,512,
+								   &modelViewStack, cubeMapPro, 1);
 	// Build the tree.
 	nodes[Sky] = Node(skybox, &nodes[Terrain], NULL);
 	nodes[Terrain] = Node(terrain, &nodes[Grass], NULL);
 	nodes[Grass] = Node(grass, &nodes[Dude], NULL);
-	nodes[Dude] = Node(dude, &nodes[Car], NULL);
+	nodes[Dude] = Node(dude, &nodes[Earth], NULL);
+	nodes[Earth] = Node(earth, &nodes[Car], NULL);
 	// Always put the car in last position, 
 	// for rendering the transparent object successfully.
 	nodes[Car] = Node(car, NULL, NULL); 
@@ -164,8 +173,6 @@ void display( void )
 	traverse( &nodes[Sky] );  //begin traverse the tree
 	glutSwapBuffers();
 }
-
-
 
 void cam() {
 

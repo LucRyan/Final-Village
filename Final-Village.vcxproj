@@ -95,6 +95,7 @@
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.h" />
+    <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\SphereModel.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\vec.h" />
     <ClInclude Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\World.h" />
     <ClInclude Include="stdafx.h" />
@@ -107,6 +108,7 @@
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Models.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\myCamera.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\Skybox.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\SphereModel.cpp" />
     <ClCompile Include="..\..\..\..\..\..\Luckin%27\Documents\Visual Studio 2010\Projects\CS537-Assignments\Final-Village\World.cpp" />
     <ClCompile Include="Final-Village.cpp" />
     <ClCompile Include="stdafx.cpp">
