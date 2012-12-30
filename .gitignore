@@ -44,7 +44,7 @@ local.properties
 # Build results
 [Dd]ebug/
 [Rr]elease/
-data/
+Raw Data/
 *_i.c
 *_p.c
 *.ilk
